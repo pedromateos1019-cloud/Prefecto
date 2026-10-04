@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#8B1538">
+<title>Pase de lista · Plantel 42</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root{--g:#8B1538;--g2:#6D0F2A;--t:#1E2638;--gris:#667085;--l:#E4E7EC;--ok:#1E7A46;--rojo:#B23A3A;--amb:#B7791F;--fondo:#F6F7F9}
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--t);background:var(--fondo);padding-bottom:env(safe-area-inset-bottom)}
+  header{position:sticky;top:0;z-index:5;background:var(--g);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px}
+  header b{font-size:16px} header small{display:block;opacity:.85;font-size:12.5px}
+  main{padding:12px 12px 90px}
+  .oculto{display:none!important}
+  .card{background:#fff;border:1px solid var(--l);border-radius:14px;padding:14px;margin-bottom:12px}
+  h2{font-size:17px;margin:0 0 8px} .sub{color:var(--gris);font-size:13px}
+  input,select,textarea{width:100%;font:inherit;padding:11px 12px;border:1px solid #D0D5DD;border-radius:10px;background:#fff;margin:6px 0}
+  textarea{min-height:90px}
+  button{font:inherit;font-weight:600;border:0;border-radius:12px;padding:12px 14px;cursor:pointer}
+  .btn{background:var(--g);color:#fff;width:100%} .btn2{background:#fff;color:var(--g);border:1px solid var(--g);width:100%} .btn3{background:#F2F4F7;color:var(--t)}
+  .btn:disabled{opacity:.5}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:#fff;border:1px solid var(--l);padding:9px 12px;border-radius:20px;font-weight:700}
+  .chip.sel{background:var(--g);color:#fff;border-color:var(--g)} .chip.hecho:not(.sel){border-color:#A7D7C5;background:#F1FAF6;color:var(--ok)}
+  .alumnos{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px;margin-top:10px}
+  .al{position:relative;background:#fff;border:2px solid var(--l);border-radius:12px;padding:6px;text-align:center;font-size:11.5px;line-height:1.2;font-weight:600;user-select:none}
+  .al img,.al .sinfoto{width:100%;aspect-ratio:1/1.05;object-fit:cover;border-radius:8px;background:#EEF0F3;display:flex;align-items:center;justify-content:center;color:#98A2B3;font-size:20px;margin-bottom:4px}
+  .al.falta{border-color:var(--rojo);background:#FDF1F1} .al.retardo{border-color:var(--amb);background:#FFF8E6}
+  .al .et{position:absolute;top:8px;left:8px;font-size:10.5px;color:#fff;padding:2px 6px;border-radius:6px}
+  .al.falta .et{background:var(--rojo)} .al.retardo .et{background:var(--amb)}
+  .barra{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid var(--l);padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:6}
+  .barra button{flex:1;background:none;color:var(--gris);font-size:12px;padding:6px 2px;border-radius:10px;position:relative}
+  .barra button.act{color:var(--g);background:#FBEFF2}
+  .barra .ic{display:block;font-size:20px;line-height:1.1}
+  .badge{position:absolute;top:2px;right:18%;background:var(--rojo);color:#fff;border-radius:9px;font-size:10.5px;padding:0 5px;min-width:16px}
+  .lista .it{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid #F0F1F3}
+  .lista .it img,.lista .it .sinfoto{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#EEF0F3;flex:0 0 42px;display:flex;align-items:center;justify-content:center;color:#98A2B3;font-weight:700}
+  .lista .it div{flex:1;min-width:0} .lista .it b{display:block;font-size:14px} .lista .it span{font-size:12px;color:var(--gris)}
+  .fila{display:flex;gap:8px} .fila>*{flex:1}
+  .ok{color:var(--ok)} .err{color:var(--rojo);font-size:13.5px;min-height:18px}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1E2638;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:9;max-width:90%}
+  .stat{display:flex;justify-content:space-around;text-align:center;margin:6px 0 12px} .stat b{display:block;font-size:24px;color:var(--g)}
+  .prev{max-width:100%;border-radius:10px;margin-top:6px}
+  .pin{font-size:26px;letter-spacing:10px;text-align:center}
+</style>
+</head>
+<body>
+<header><b>Pase de lista · Plantel 42</b><small id="hdr">COBATAB</small></header>
+<main>
+  <!-- Configuración inicial -->
+  <section id="vConfig" class="oculto"><div class="card"><h2>Configurar este celular</h2>
+    <p class="sub">1. Abre el archivo del paquete que te envió la Subdirección (llega por WhatsApp como documento).</p>
+    <input type="file" id="cfArchivo" accept=".txt,text/plain">
+    <p class="sub">2. Escribe la clave que te dieron en persona.</p>
+    <input id="cfClave" autocomplete="off" autocapitalize="characters" placeholder="Clave del paquete">
+    <p class="sub">3. Crea un PIN de 6 dígitos para abrir la app.</p>
+    <input id="cfPin" class="pin" type="password" inputmode="numeric" maxlength="6" placeholder="PIN">
+    <input id="cfPin2" class="pin" type="password" inputmode="numeric" maxlength="6" placeholder="Repite el PIN">
+    <div id="cfTotpBox"><p class="sub">4. Escribe el código de 6 dígitos de <b>Google Authenticator</b> (la cuenta “COBATAB Plantel 42” que agregaste con el QR en la Subdirección).</p>
+    <input id="cfCodigo" class="pin" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="Código"></div>
+    <div class="err" id="cfErr"></div><button class="btn" id="cfOk">Guardar</button></div></section>
+  <!-- PIN -->
+  <section id="vPin" class="oculto"><div class="card" style="text-align:center"><h2 id="pinHola">Escribe tu PIN</h2>
+    <input id="pin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="PIN">
+    <input id="pinCod" class="pin" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="Código del autenticador">
+    <div class="sub" id="pinCodTxt">Abre Google Authenticator y escribe el código de “COBATAB Plantel 42”.</div>
+    <div class="err" id="pinErr"></div><button class="btn" id="pinOk">Entrar</button></div></section>
+  <!-- Pase de lista -->
+  <section id="vPase" class="oculto">
+    <div class="card"><h2>Pase de lista</h2><div class="sub" id="paseFecha"></div><div class="chips" id="grupos" style="margin-top:10px"></div></div>
+    <div class="card oculto" id="paseCard"><div class="fila" style="align-items:center"><h2 id="paseTit" style="margin:0"></h2><span class="sub" id="paseCuenta" style="text-align:right"></span></div>
+      <div class="sub">Toca a quien falta. Otro toque: retardo. Otro: presente.</div>
+      <div class="alumnos" id="alumnos"></div>
+      <button class="btn" id="paseGuardar" style="margin-top:12px">Guardar pase de lista</button></div>
+  </section>
+  <!-- Fuera de clase -->
+  <section id="vFuera" class="oculto">
+    <div class="card"><h2>Alumno fuera de clase</h2><div class="sub">Se registra con la hora actual. Cuenta como falta en la clase que tenía a esa hora y genera un reporte para revisión.</div>
+      <input id="fuBus" placeholder="Buscar por nombre o matrícula" autocomplete="off"><div class="lista" id="fuRes"></div></div>
+    <div class="card"><h2>Registrados hoy</h2><div class="lista" id="fuHoy"></div></div>
+  </section>
+  <!-- Reporte -->
+  <section id="vRep" class="oculto"><div class="card"><h2>Reporte de conducta</h2><div class="sub">Llega a la Subdirección para revisión; no es oficial hasta que se confirme.</div>
+    <input id="reBus" placeholder="Buscar alumno por nombre o matrícula" autocomplete="off"><div class="lista" id="reRes"></div>
+    <div id="reForm" class="oculto"><div class="lista" id="reAl"></div>
+      <input id="reFalta" list="lFaltas" placeholder="Falta (elige o escribe)" maxlength="150"><datalist id="lFaltas"></datalist>
+      <select id="reGrav"><option value="">Gravedad…</option><option>Leve</option><option>Grave</option><option>Muy grave</option></select>
+      <textarea id="reDesc" maxlength="600" placeholder="Qué pasó, dónde y quién estaba presente"></textarea>
+      <label class="sub">Foto de evidencia (opcional)</label><input type="file" id="reFoto" accept="image/*" capture="environment"><img id="rePrev" class="prev oculto" alt="">
+      <div class="err" id="reErr"></div><button class="btn" id="reGuardar">Guardar reporte</button></div></div>
+    <div class="card"><h2>Reportes de hoy</h2><div class="lista" id="reHoy"></div></div></section>
+  <!-- Enviar -->
+  <section id="vEnv" class="oculto"><div class="card"><h2>Enviar a la Subdirección</h2>
+    <div class="stat"><div><b id="nPases">0</b>pases</div><div><b id="nFuera">0</b>fuera de clase</div><div><b id="nRep">0</b>reportes</div></div>
+    <button class="btn" id="envWa">Enviar por WhatsApp</button>
+    <button class="btn2" id="envDesc" style="margin-top:8px">Descargar archivo</button>
+    <p class="sub">El archivo va firmado: si alguien lo modifica, la Subdirección lo rechaza. Lo enviado se borra de este celular a los 7 días.</p></div>
+    <div class="card"><h2>Envíos recientes</h2><div class="lista" id="envHist"></div></div>
+    <div class="card"><h2>Ajustes</h2><button class="btn3" id="ajPaquete" style="width:100%">Cargar paquete actualizado</button>
+      <input type="file" id="ajArchivo" accept=".txt,text/plain" class="oculto"><button class="btn3" id="ajBloq" style="width:100%;margin-top:8px">Bloquear</button>
+      <button class="btn3" id="ajBorrar" style="width:100%;margin-top:8px;color:var(--rojo)">Borrar todo de este celular</button></div></section>
+</main>
+<nav class="barra oculto" id="barra">
+  <button data-v="vPase"><span class="ic">✓</span>Pase</button><button data-v="vFuera"><span class="ic">⟶</span>Fuera de clase</button>
+  <button data-v="vRep"><span class="ic">!</span>Reporte</button><button data-v="vEnv"><span class="ic">↑</span>Enviar<span class="badge oculto" id="badge"></span></button>
+</nav>
+<script>
+'use strict';
+const $ = s => document.querySelector(s), esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const hoy = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const hora = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const fechaTxt = iso => new Date(iso + 'T12:00').toLocaleDateString('es-MX', {weekday: 'long', day: 'numeric', month: 'long'});
+const toast = t => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2600); };
+const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf))), deb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const b64grande = buf => { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+const uuid = () => crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
+// ---------- Almacenamiento cifrado (IndexedDB) ----------
+const DB = {db: null, async abrir(){ if (this.db) return this.db; return this.db = await new Promise((ok, mal) => { const r = indexedDB.open('p42prefecto', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => ok(r.result); r.onerror = () => mal(r.error); }); },
+  async get(k){ const db = await this.abrir(); return new Promise(ok => { const r = db.transaction('kv').objectStore('kv').get(k); r.onsuccess = () => ok(r.result); r.onerror = () => ok(undefined); }); },
+  async set(k, v){ const db = await this.abrir(); return new Promise((ok, mal) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = ok; t.onerror = () => mal(t.error); }); },
+  async borrar(){ const db = await this.abrir(); return new Promise(ok => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').clear(); t.oncomplete = ok; }); }};
+async function claveDe(txt, sal){ const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(txt), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name: 'PBKDF2', salt: sal, iterations: 200000, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, false, ['encrypt', 'decrypt']); }
+async function cifrar(obj, key){ const iv = crypto.getRandomValues(new Uint8Array(12)); const c = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, new TextEncoder().encode(JSON.stringify(obj))); return {iv: b64(iv), data: b64grande(c)}; }
+async function descifrar(o, key){ const p = await crypto.subtle.decrypt({name: 'AES-GCM', iv: deb64(o.iv)}, key, deb64(o.data)); return JSON.parse(new TextDecoder().decode(p)); }
+// ---------- Autenticador (TOTP compatible con Google Authenticator) ----------
+const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function b32dec(str){ const s2 = String(str).replace(/[^A-Z2-7]/gi, '').toUpperCase(); let bits = 0, val = 0; const out = []; for (const c of s2) { val = (val << 5) | B32.indexOf(c); bits += 5; if (bits >= 8) { out.push((val >>> (bits - 8)) & 255); bits -= 8; } } return new Uint8Array(out); }
+async function totp(secret, paso){ const key = await crypto.subtle.importKey('raw', b32dec(secret), {name: 'HMAC', hash: 'SHA-1'}, false, ['sign']);
+  const msg = new ArrayBuffer(8), dv = new DataView(msg); dv.setUint32(0, Math.floor(paso / 4294967296)); dv.setUint32(4, paso >>> 0);
+  const h = new Uint8Array(await crypto.subtle.sign('HMAC', key, msg)), o = h[19] & 15; return String((((h[o] & 127) << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3]) % 1000000).padStart(6, '0'); }
+async function totpValido(secret, code){ if (!/^\d{6}$/.test(code)) return false; const paso = Math.floor(Date.now() / 30000); for (const w of [-1, 0, 1]) if ((await totp(secret, paso + w)) === code) return true; return false; }
+// Intentos fallidos guardados en el celular (no se reinician al recargar): 5 fallos = espera creciente
+async function esperaFallos(){ const f = await DB.get('fallos') || {n: 0, hasta: 0}; return f.hasta > Date.now() ? Math.ceil((f.hasta - Date.now()) / 1000) : 0; }
+async function fallo(){ const f = await DB.get('fallos') || {n: 0, hasta: 0}; f.n++; if (f.n % 5 === 0) f.hasta = Date.now() + Math.min(3600, 60 * Math.pow(2, f.n / 5 - 1)) * 1000; await DB.set('fallos', f); }
+let sesionCompleta = false;
+
+// ---------- Estado ----------
+let llave = null, sal = null, PQ = null, D = {pases: [], fuera: [], reportes: [], envios: []}, grupoSel = '', marcas = {};
+async function guardarDatos(){ await DB.set('datos', await cifrar(D, llave)); pintarBadge(); }
+const alumnos = () => PQ.grupos.flatMap(g => g.alumnos.map(a => ({...a, g: g.g})));
+const alumno = m => alumnos().find(a => a.m === m);
+const foto = a => a && a.f ? `<img src="${a.f}" alt="">` : `<div class="sinfoto">${esc((a && a.n || '?')[0])}</div>`;
+function vista(id){ document.querySelectorAll('main>section').forEach(s => s.classList.toggle('oculto', s.id !== id)); document.querySelectorAll('#barra button').forEach(b => b.classList.toggle('act', b.dataset.v === id));
+  if (id === 'vPase') pintarPase(); if (id === 'vFuera') pintarFuera(); if (id === 'vRep') pintarRep(); if (id === 'vEnv') pintarEnv(); window.scrollTo(0, 0); }
+document.querySelectorAll('#barra button').forEach(b => b.onclick = () => vista(b.dataset.v));
+const pendientes = () => ({p: D.pases.filter(x => !x.env), f: D.fuera.filter(x => !x.env), r: D.reportes.filter(x => !x.env)});
+function pintarBadge(){ const p = pendientes(), n = p.p.length + p.f.length + p.r.length; $('#badge').textContent = n; $('#badge').classList.toggle('oculto', !n); }
+// ---------- Arranque ----------
+async function iniciar(){
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  const s = await DB.get('seguro'); if (!s) return vista('vConfig');
+  $('#pinHola').textContent = `Hola, ${s.nombre || 'prefecto'}`; const pide = s.totp && !sesionCompleta;
+  $('#pinCod').classList.toggle('oculto', !pide); $('#pinCodTxt').classList.toggle('oculto', !pide); $('#pinCod').value = '';
+  vista('vPin'); setTimeout(() => $('#pin').focus(), 100);
+}
+$('#pinOk').onclick = async () => {
+  const s = await DB.get('seguro'), espera = await esperaFallos(); $('#pinErr').textContent = '';
+  if (espera) return $('#pinErr').textContent = `Demasiados intentos. Espera ${espera > 90 ? Math.ceil(espera / 60) + ' minutos' : espera + ' segundos'}.`;
+  try { sal = deb64(s.sal); llave = await claveDe($('#pin').value, sal); PQ = await descifrar(s.paquete, llave); }
+  catch { llave = null; PQ = null; await fallo(); $('#pinErr').textContent = 'PIN incorrecto.'; $('#pin').value = ''; return; }
+  if (PQ.prefecto.totp && !sesionCompleta && !(await totpValido(PQ.prefecto.totp, $('#pinCod').value.trim()))) {
+    llave = null; PQ = null; await fallo(); $('#pinErr').textContent = 'Código del autenticador incorrecto o vencido. Revisa que la hora del celular sea automática.'; $('#pinCod').value = ''; return; }
+  try { await DB.set('fallos', {n: 0, hasta: 0}); sesionCompleta = true;
+    const d = await DB.get('datos'); D = d ? await descifrar(d, llave) : D; $('#pin').value = ''; $('#pinCod').value = '';
+    limpiarViejos(); $('#hdr').textContent = `${PQ.prefecto.nombre} · ${fechaTxt(hoy())}`; $('#barra').classList.remove('oculto'); pintarBadge(); vista('vPase'); vigilar();
+  } catch (e) { $('#pinErr').textContent = 'No se pudieron leer los datos: ' + e.message; }
+};
+$('#pin').onkeydown = e => { if (e.key !== 'Enter') return; if ($('#pinCod').classList.contains('oculto')) $('#pinOk').click(); else $('#pinCod').focus(); };
+$('#pinCod').onkeydown = e => { if (e.key === 'Enter') $('#pinOk').click(); };
+async function leerPaquete(archivo, clave){
+  const o = JSON.parse(await archivo.text()); if (o.tipo !== 'P42-PAQUETE') throw new Error('Ese archivo no es un paquete de Plantel 42.');
+  try { return await descifrar(o, await claveDe(clave.trim().toUpperCase(), deb64(o.sal))); } catch { throw new Error('La clave no corresponde a este paquete.'); }
+}
+$('#cfOk').onclick = async () => {
+  const err = $('#cfErr'), f = $('#cfArchivo').files[0], pin = $('#cfPin').value; err.textContent = '';
+  if (!f) return err.textContent = 'Elige el archivo del paquete.';
+  if (!/^\d{6}$/.test(pin)) return err.textContent = 'El PIN debe tener 6 dígitos.';
+  if (/^(\d)\1+$/.test(pin) || '0123456789012'.includes(pin) || '9876543210987'.includes(pin)) return err.textContent = 'Usa un PIN menos obvio (no repetidos ni consecutivos).';
+  if (pin !== $('#cfPin2').value) return err.textContent = 'Los PIN no coinciden.';
+  try { PQ = await leerPaquete(f, $('#cfClave').value);
+    if (PQ.prefecto.totp && !(await totpValido(PQ.prefecto.totp, $('#cfCodigo').value.trim()))) { PQ = null; return err.textContent = 'El código de Google Authenticator no coincide. Revisa que agregaste la cuenta con el QR de la Subdirección y que la hora del celular sea automática.'; }
+    sal = crypto.getRandomValues(new Uint8Array(16)); llave = await claveDe(pin, sal); sesionCompleta = true;
+    await DB.set('seguro', {sal: b64(sal), totp: !!PQ.prefecto.totp, nombre: PQ.prefecto.nombre.split(' ').slice(0, 2).join(' '), paquete: await cifrar(PQ, llave)}); await guardarDatos();
+    $('#hdr').textContent = `${PQ.prefecto.nombre} · ${fechaTxt(hoy())}`; $('#barra').classList.remove('oculto'); toast('Listo: celular configurado'); vista('vPase'); vigilar();
+  } catch (e) { err.textContent = e.message; }
+};
+// Bloqueo por inactividad (5 min)
+let tInac; function vigilar(){ const r = () => { clearTimeout(tInac); tInac = setTimeout(bloquear, 300000); }; ['click', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, r, {passive: true})); r(); }
+function bloquear(){ llave = null; PQ = null; $('#barra').classList.add('oculto'); iniciar(); }
+function limpiarViejos(){ const lim = Date.now() - 7 * 86400000; const viejo = x => x.env && new Date(x.envFecha || 0).getTime() < lim;
+  D.pases = D.pases.filter(x => !viejo(x)); D.fuera = D.fuera.filter(x => !viejo(x)); D.reportes = D.reportes.filter(x => !viejo(x)); D.envios = (D.envios || []).filter(x => new Date(x.fecha).getTime() >= lim); }
+// ---------- Pase de lista ----------
+function pintarPase(){
+  $('#paseFecha').textContent = `Hoy, ${fechaTxt(hoy())}`;
+  const hechos = new Set(D.pases.filter(p => p.fecha === hoy()).map(p => p.g));
+  $('#grupos').innerHTML = PQ.grupos.map(g => `<button class="chip${g.g === grupoSel ? ' sel' : ''}${hechos.has(g.g) ? ' hecho' : ''}" data-g="${g.g}">${g.g}${hechos.has(g.g) ? ' ✓' : ''}</button>`).join('');
+  document.querySelectorAll('#grupos .chip').forEach(b => b.onclick = () => { grupoSel = b.dataset.g; const prev = D.pases.filter(p => p.fecha === hoy() && p.g === grupoSel).pop();
+    marcas = {}; if (prev) { prev.ausentes.forEach(m => marcas[m] = 'falta'); prev.retardos.forEach(m => marcas[m] = 'retardo'); } pintarPase(); });
+  const g = PQ.grupos.find(x => x.g === grupoSel); $('#paseCard').classList.toggle('oculto', !g); if (!g) return;
+  $('#paseTit').textContent = `Grupo ${g.g}`;
+  const nF = Object.values(marcas).filter(x => x === 'falta').length, nR = Object.values(marcas).filter(x => x === 'retardo').length;
+  $('#paseCuenta').textContent = `${g.alumnos.length} alumnos · ${nF} faltas${nR ? ` · ${nR} retardos` : ''}`;
+  $('#alumnos').innerHTML = g.alumnos.map(a => `<div class="al ${marcas[a.m] || ''}" data-m="${a.m}">${marcas[a.m] ? `<span class="et">${marcas[a.m] === 'falta' ? 'Falta' : 'Retardo'}</span>` : ''}${foto(a)}${esc(a.n)}</div>`).join('');
+  document.querySelectorAll('#alumnos .al').forEach(c => c.onclick = () => { const m = c.dataset.m; marcas[m] = !marcas[m] ? 'falta' : marcas[m] === 'falta' ? 'retardo' : undefined; if (!marcas[m]) delete marcas[m]; pintarPase(); });
+  $('#paseGuardar').textContent = hechos.has(g.g) ? 'Actualizar pase de lista' : 'Guardar pase de lista';
+}
+$('#paseGuardar').onclick = async () => {
+  const g = grupoSel; if (!g) return;
+  D.pases = D.pases.filter(p => !(p.fecha === hoy() && p.g === g && !p.env));
+  D.pases.push({id: uuid(), fecha: hoy(), g, hora: hora(), ausentes: Object.keys(marcas).filter(m => marcas[m] === 'falta'), retardos: Object.keys(marcas).filter(m => marcas[m] === 'retardo')});
+  await guardarDatos(); toast(`Pase de ${g} guardado`); grupoSel = ''; marcas = {}; pintarPase();
+};
+// ---------- Búsqueda de alumnos ----------
+const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function buscar(q){ const w = norm(q).split(/\s+/).filter(Boolean); if (!w.length) return [];
+  return alumnos().filter(a => { const t = norm(`${a.n} ${a.m} ${a.g}`); return w.every(x => t.includes(x)); }).slice(0, 15); }
+const itemAl = (a, extra) => `<div class="it" data-m="${a.m}">${foto(a)}<div><b>${esc(a.n)}</b><span>${esc(a.g)} · ${esc(a.m)}</span></div>${extra || ''}</div>`;
+// ---------- Fuera de clase ----------
+function pintarFuera(){
+  const h = D.fuera.filter(x => x.fecha === hoy());
+  $('#fuHoy').innerHTML = h.length ? h.slice().reverse().map(x => itemAl(alumno(x.m) || {n: x.m, m: x.m, g: ''}, `<span class="sub">${x.hora}${x.env ? ' · enviado' : ''}</span>`)).join('') : '<div class="sub">Nadie todavía.</div>';
+}
+$('#fuBus').oninput = () => { $('#fuRes').innerHTML = buscar($('#fuBus').value).map(a => itemAl(a, '<button class="btn3" style="padding:8px 10px">Registrar</button>')).join('');
+  document.querySelectorAll('#fuRes .it').forEach(it => it.querySelector('button').onclick = async () => {
+    const a = alumno(it.dataset.m), h = hora();
+    if (!confirm(`¿Registrar a ${a.n} (${a.g}) fuera de clase a las ${h}?`)) return;
+    D.fuera.push({id: uuid(), fecha: hoy(), hora: h, m: a.m}); await guardarDatos(); $('#fuBus').value = ''; $('#fuRes').innerHTML = ''; toast('Registrado'); pintarFuera(); }); };
+// ---------- Reportes ----------
+let reSel = null, reFoto = '';
+function pintarRep(){
+  $('#lFaltas').innerHTML = (PQ.faltas || []).map(f => `<option value="${esc(f.f)}">${esc(f.g)}</option>`).join('');
+  const h = D.reportes.filter(x => x.fecha === hoy());
+  $('#reHoy').innerHTML = h.length ? h.slice().reverse().map(x => itemAl(alumno(x.m) || {n: x.m, m: x.m, g: ''}, `<span class="sub">${x.hora} · ${esc(x.falta)}${x.env ? ' · enviado' : ''}</span>`)).join('') : '<div class="sub">Sin reportes hoy.</div>';
+}
+$('#reBus').oninput = () => { $('#reRes').innerHTML = buscar($('#reBus').value).map(a => itemAl(a)).join('');
+  document.querySelectorAll('#reRes .it').forEach(it => it.onclick = () => { reSel = alumno(it.dataset.m); $('#reRes').innerHTML = ''; $('#reBus').value = ''; $('#reAl').innerHTML = itemAl(reSel); $('#reForm').classList.remove('oculto'); }); };
+$('#reFalta').oninput = () => { const f = (PQ.faltas || []).find(x => x.f === $('#reFalta').value); if (f) $('#reGrav').value = f.g; };
+$('#reFoto').onchange = async () => { const f = $('#reFoto').files[0]; if (!f) return;
+  const img = await createImageBitmap(f), k = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+  c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  reFoto = c.toDataURL('image/jpeg', 0.72); $('#rePrev').src = reFoto; $('#rePrev').classList.remove('oculto'); };
+$('#reGuardar').onclick = async () => {
+  const err = $('#reErr'); err.textContent = '';
+  if (!reSel) return err.textContent = 'Elige al alumno.';
+  if (!$('#reFalta').value.trim()) return err.textContent = 'Escribe la falta.';
+  if (!$('#reGrav').value) return err.textContent = 'Elige la gravedad.';
+  D.reportes.push({id: uuid(), fecha: hoy(), hora: hora(), m: reSel.m, falta: $('#reFalta').value.trim().slice(0, 150), gravedad: $('#reGrav').value, desc: $('#reDesc').value.trim().slice(0, 600), foto: reFoto});
+  await guardarDatos(); toast('Reporte guardado');
+  reSel = null; reFoto = ''; $('#reForm').classList.add('oculto'); ['#reFalta', '#reDesc'].forEach(s => $(s).value = ''); $('#reGrav').value = ''; $('#reFoto').value = ''; $('#rePrev').classList.add('oculto'); pintarRep();
+};
+// ---------- Envío firmado ----------
+function pintarEnv(){
+  const p = pendientes(); $('#nPases').textContent = p.p.length; $('#nFuera').textContent = p.f.length; $('#nRep').textContent = p.r.length;
+  $('#envWa').disabled = $('#envDesc').disabled = !(p.p.length + p.f.length + p.r.length);
+  $('#envHist').innerHTML = (D.envios || []).length ? D.envios.slice().reverse().map(e => `<div class="it"><div><b>${new Date(e.fecha).toLocaleString('es-MX', {dateStyle: 'medium', timeStyle: 'short'})}</b><span>${e.resumen}</span></div><button class="btn3" data-reenv="${e.id}" style="padding:8px 10px">Reenviar</button></div>`).join('') : '<div class="sub">Sin envíos.</div>';
+  document.querySelectorAll('[data-reenv]').forEach(b => b.onclick = () => enviar(b.dataset.reenv));
+}
+async function armarArchivo(ids){
+  const sel = x => ids ? x.envio === ids : !x.env, envio = ids || uuid();
+  const pay = {envio, prefecto: PQ.prefecto.id, creado: new Date().toISOString(), version: 1,
+    pases: D.pases.filter(sel).map(({id, fecha, g, hora, ausentes, retardos}) => ({id, fecha, g, hora, ausentes, retardos})),
+    fuera: D.fuera.filter(sel).map(({id, fecha, hora, m}) => ({id, fecha, hora, m})),
+    reportes: D.reportes.filter(sel).map(({id, fecha, hora, m, falta, gravedad, desc, foto}) => ({id, fecha, hora, m, falta, gravedad, desc, foto}))};
+  const payload = JSON.stringify(pay);
+  const k = await crypto.subtle.importKey('raw', deb64(PQ.prefecto.secreto), {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
+  const firma = b64(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(payload)));
+  const txt = JSON.stringify({tipo: 'P42-ENVIO', v: 1, prefecto: PQ.prefecto.id, payload, firma});
+  const nom = `PaseLista_P42_${hoy()}_${PQ.prefecto.id}_${envio.slice(0, 6)}.txt`;
+  return {file: new File([txt], nom, {type: 'text/plain'}), envio, pay};
+}
+async function enviar(reenvio){
+  const {file, envio, pay} = await armarArchivo(reenvio);
+  let ok = false;
+  if (navigator.canShare && navigator.canShare({files: [file]})) { try { await navigator.share({files: [file], title: 'Pase de lista Plantel 42'}); ok = true; } catch (e) { if (e.name === 'AbortError') return; } }
+  if (!ok) { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); ok = true; toast('Archivo descargado; mándalo por WhatsApp como documento'); }
+  if (!reenvio) { const ahora = new Date().toISOString(); [D.pases, D.fuera, D.reportes].forEach(l => l.forEach(x => { if (!x.env) { x.env = true; x.envio = envio; x.envFecha = ahora; } }));
+    D.envios = D.envios || []; D.envios.push({id: envio, fecha: ahora, resumen: `${pay.pases.length} pases · ${pay.fuera.length} fuera de clase · ${pay.reportes.length} reportes`}); await guardarDatos(); }
+  pintarEnv();
+}
+$('#envWa').onclick = () => enviar(); $('#envDesc').onclick = async () => { const {file} = await armarArchivo(); const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); };
+// ---------- Ajustes ----------
+$('#ajBloq').onclick = bloquear;
+$('#ajPaquete').onclick = () => $('#ajArchivo').click();
+$('#ajArchivo').onchange = async () => { const f = $('#ajArchivo').files[0]; if (!f) return; const clave = prompt('Clave del paquete nuevo:'); if (!clave) return;
+  try { const nuevo = await leerPaquete(f, clave); if (nuevo.prefecto.id !== PQ.prefecto.id) throw new Error('El paquete es de otro prefecto.');
+    if (nuevo.prefecto.totp && nuevo.prefecto.totp !== PQ.prefecto.totp) { const c = prompt('El paquete trae un autenticador nuevo. Escanea el QR en la Subdirección y escribe el código de Google Authenticator:');
+      if (!c || !(await totpValido(nuevo.prefecto.totp, c.trim()))) throw new Error('El código no coincide; el paquete no se cargó.'); }
+    PQ = nuevo; const s = await DB.get('seguro'); s.paquete = await cifrar(PQ, llave); s.totp = !!PQ.prefecto.totp; await DB.set('seguro', s); toast('Paquete actualizado'); vista('vPase'); } catch (e) { alert(e.message); } $('#ajArchivo').value = ''; };
+$('#ajBorrar').onclick = async () => { if (!confirm('¿Borrar todo de este celular? Lo no enviado se perderá.')) return; await DB.borrar(); location.reload(); };
+iniciar();
+</script>
+</body>
+</html>
