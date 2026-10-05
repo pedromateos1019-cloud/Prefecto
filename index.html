@@ -134,9 +134,14 @@ async function totp(secret, paso){ const key = await crypto.subtle.importKey('ra
   const msg = new ArrayBuffer(8), dv = new DataView(msg); dv.setUint32(0, Math.floor(paso / 4294967296)); dv.setUint32(4, paso >>> 0);
   const h = new Uint8Array(await crypto.subtle.sign('HMAC', key, msg)), o = h[19] & 15; return String((((h[o] & 127) << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3]) % 1000000).padStart(6, '0'); }
 async function totpValido(secret, code){ if (!/^\d{6}$/.test(code)) return false; const paso = Math.floor(Date.now() / 30000); for (const w of [-1, 0, 1]) if ((await totp(secret, paso + w)) === code) return true; return false; }
-// Intentos fallidos guardados en el celular (no se reinician al recargar): 5 fallos = espera creciente
-async function esperaFallos(){ const f = await DB.get('fallos') || {n: 0, hasta: 0}; return f.hasta > Date.now() ? Math.ceil((f.hasta - Date.now()) / 1000) : 0; }
-async function fallo(){ const f = await DB.get('fallos') || {n: 0, hasta: 0}; f.n++; if (f.n % 5 === 0) f.hasta = Date.now() + Math.min(3600, 60 * Math.pow(2, f.n / 5 - 1)) * 1000; await DB.set('fallos', f); }
+// Intentos fallidos guardados en el celular (no se reinician al cerrar la app ni al reiniciar el celular):
+// 3 errores seguidos (PIN o código del autenticador) = la app queda bloqueada 24 horas, sin excepción.
+const MAX_FALLOS = 3, BLOQUEO_MS = 24 * 3600 * 1000;
+async function esperaFallos(){ const f = await DB.get('fallos') || {n: 0, hasta: 0}; return f.hasta > Date.now() ? f.hasta : 0; }
+async function fallo(){ const f = await DB.get('fallos') || {n: 0, hasta: 0}; f.n++; let quedan = MAX_FALLOS - f.n;
+  if (f.n >= MAX_FALLOS) { f.hasta = Date.now() + BLOQUEO_MS; f.n = 0; quedan = 0; } await DB.set('fallos', f); return quedan; }
+const txtBloqueo = hasta => `Demasiados intentos. La app quedó bloqueada hasta el ${new Date(hasta).toLocaleString('es-MX', {weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'}).replace(/\.$/, '')}.`;
+const txtQuedan = (q, que) => q ? `${que} Te ${q === 1 ? 'queda 1 intento' : `quedan ${q} intentos`}; al tercer error la app se bloquea 24 horas.` : null;
 let sesionCompleta = false;
 
 // ---------- Estado ----------
@@ -160,11 +165,11 @@ async function iniciar(){
 }
 $('#pinOk').onclick = async () => {
   const s = await DB.get('seguro'), espera = await esperaFallos(); $('#pinErr').textContent = '';
-  if (espera) return $('#pinErr').textContent = `Demasiados intentos. Espera ${espera > 90 ? Math.ceil(espera / 60) + ' minutos' : espera + ' segundos'}.`;
+  if (espera) return $('#pinErr').textContent = txtBloqueo(espera);
   try { sal = deb64(s.sal); llave = await claveDe($('#pin').value, sal); PQ = await descifrar(s.paquete, llave); }
-  catch { llave = null; PQ = null; await fallo(); $('#pinErr').textContent = 'PIN incorrecto.'; $('#pin').value = ''; return; }
+  catch { llave = null; PQ = null; const q = await fallo(); $('#pinErr').textContent = txtQuedan(q, 'PIN incorrecto.') || txtBloqueo(await esperaFallos()); $('#pin').value = ''; return; }
   if (PQ.prefecto.totp && !sesionCompleta && !(await totpValido(PQ.prefecto.totp, $('#pinCod').value.trim()))) {
-    llave = null; PQ = null; await fallo(); $('#pinErr').textContent = 'Código del autenticador incorrecto o vencido. Revisa que la hora del celular sea automática.'; $('#pinCod').value = ''; return; }
+    llave = null; PQ = null; const q = await fallo(); $('#pinErr').textContent = txtQuedan(q, 'Código del autenticador incorrecto o vencido. Revisa que la hora del celular sea automática.') || txtBloqueo(await esperaFallos()); $('#pinCod').value = ''; return; }
   try { await DB.set('fallos', {n: 0, hasta: 0}); sesionCompleta = true;
     const d = await DB.get('datos'); D = d ? await descifrar(d, llave) : D; $('#pin').value = ''; $('#pinCod').value = '';
     limpiarViejos(); $('#hdr').textContent = `${PQ.prefecto.nombre} · ${fechaTxt(hoy())}`; $('#barra').classList.remove('oculto'); pintarBadge(); vista('vPase'); vigilar();
@@ -174,7 +179,9 @@ $('#pin').onkeydown = e => { if (e.key !== 'Enter') return; if ($('#pinCod').cla
 $('#pinCod').onkeydown = e => { if (e.key === 'Enter') $('#pinOk').click(); };
 async function leerPaquete(archivo, clave){
   const o = JSON.parse(await archivo.text()); if (o.tipo !== 'P42-PAQUETE') throw new Error('Ese archivo no es un paquete de Plantel 42.');
-  try { return await descifrar(o, await claveDe(clave.trim().toUpperCase(), deb64(o.sal))); } catch { throw new Error('La clave no corresponde a este paquete.'); }
+  // Acepta la clave con o sin guion, con espacios o en minúsculas (la Subdirección la da como XXXX-XXXX)
+  const c = String(clave).toUpperCase().replace(/[^A-Z0-9]/g, ''), k = c.length === 8 ? c.slice(0, 4) + '-' + c.slice(4) : String(clave).trim().toUpperCase();
+  try { return await descifrar(o, await claveDe(k, deb64(o.sal))); } catch { throw new Error('La clave no corresponde a este paquete.'); }
 }
 $('#cfOk').onclick = async () => {
   const err = $('#cfErr'), f = $('#cfArchivo').files[0], pin = $('#cfPin').value; err.textContent = '';
