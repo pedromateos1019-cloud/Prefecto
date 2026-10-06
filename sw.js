@@ -1,7 +1,7 @@
 // Guarda la app para que abra sin internet. Cambia la versión al publicar cambios.
 // Estrategia: primero la red (para recibir actualizaciones), pero si no responde en 3 segundos
 // (señal débil) se abre con la copia guardada; la respuesta de la red, si llega después, actualiza la copia.
-const VERSION = 'p42-prefectos-v3';
+const VERSION = 'p42-prefectos-v4';
 const ARCHIVOS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 const ESPERA_RED = 3000;
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS))); self.skipWaiting(); });
