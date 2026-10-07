@@ -20,8 +20,6 @@
   input,select,textarea{width:100%;font:inherit;padding:11px 12px;border:1px solid #D0D5DD;border-radius:10px;background:#fff;margin:6px 0}
   textarea{min-height:90px}
   button{font:inherit;font-weight:600;border:0;border-radius:12px;padding:12px 14px;cursor:pointer}
-  .eleccion{font-size:13px;line-height:1.35;margin:2px 2px 6px} .eleccion:empty{display:none} .it .info{display:block;font-size:12.5px;color:#475467;margin-top:2px}
-  #fuForm .btn2{margin-top:8px}
   .btn{background:var(--g);color:#fff;width:100%} .btn2{background:#fff;color:var(--g);border:1px solid var(--g);width:100%} .btn3{background:#F2F4F7;color:var(--t)}
   .btn:disabled{opacity:.5}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -47,6 +45,10 @@
   .stat{display:flex;justify-content:space-around;text-align:center;margin:6px 0 12px} .stat b{display:block;font-size:24px;color:var(--g)}
   .prev{max-width:100%;border-radius:10px;margin-top:6px}
   .pin{font-size:26px;letter-spacing:10px;text-align:center}
+  .fh{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:8px 0}
+  .fh label{flex:1;min-width:120px;font-size:12.5px;color:var(--gris);display:flex;flex-direction:column}
+  .fh input{margin:4px 0 0} .fh .btn3{padding:11px 12px}
+  .otrodia{display:inline-block;background:#FFF3D6;color:#8A5A00;border-radius:6px;padding:1px 6px;font-size:11.5px;font-weight:700}
 </style>
 </head>
 <body>
@@ -72,7 +74,9 @@
     <div class="err" id="pinErr"></div><button class="btn" id="pinOk">Entrar</button></div></section>
   <!-- Pase de lista -->
   <section id="vPase" class="oculto">
-    <div class="card"><h2>Pase de lista</h2><div class="sub" id="paseFecha"></div><div class="chips" id="grupos" style="margin-top:10px"></div></div>
+    <div class="card"><h2>Pase de lista</h2>
+      <div class="fh"><label>Fecha del pase<input type="date" id="paseDia"></label><button class="btn3" id="paseHoy">Hoy</button></div>
+      <div class="sub" id="paseFecha"></div><div class="chips" id="grupos" style="margin-top:10px"></div></div>
     <div class="card oculto" id="paseCard"><div class="fila" style="align-items:center"><h2 id="paseTit" style="margin:0"></h2><span class="sub" id="paseCuenta" style="text-align:right"></span></div>
       <div class="sub">Toca a quien falta. Otro toque: retardo. Otro: presente.</div>
       <div class="alumnos" id="alumnos"></div>
@@ -80,22 +84,22 @@
   </section>
   <!-- Fuera de clase -->
   <section id="vFuera" class="oculto">
-    <div class="card"><h2>Alumno fuera de clase</h2><div class="sub">Se registra con la hora actual. Cuenta como falta en la clase que elijas (la app propone la que tiene a esa hora) y genera un reporte para revisión.</div>
-      <input id="fuBus" placeholder="Buscar por nombre o matrícula" autocomplete="off"><div class="lista" id="fuRes"></div>
-      <div id="fuForm" class="oculto"><div class="lista" id="fuAl"></div><div id="fuClase"></div>
-        <div class="err" id="fuErr"></div><button class="btn" id="fuGuardar">Registrar fuera de clase</button><button class="btn2" id="fuCancelar">Cancelar</button></div></div>
-    <div class="card"><h2>Registrados hoy</h2><div class="lista" id="fuHoy"></div></div>
+    <div class="card"><h2>Alumno fuera de clase</h2><div class="sub">Cuenta como falta en la clase que tenía a esa hora y genera un reporte para revisión. Si fue otro día u otra hora, cámbialos antes de registrar.</div>
+      <div class="fh"><label>Fecha<input type="date" id="fuDia"></label><label>Hora<input type="time" id="fuHora"></label><button class="btn3" id="fuAhora">Ahora</button></div>
+      <input id="fuBus" placeholder="Buscar por nombre o matrícula" autocomplete="off"><div class="lista" id="fuRes"></div></div>
+    <div class="card"><h2>Registrados (últimos 7 días)</h2><div class="lista" id="fuHoy"></div></div>
   </section>
   <!-- Reporte -->
   <section id="vRep" class="oculto"><div class="card"><h2>Reporte de conducta</h2><div class="sub">Llega a la Subdirección para revisión; no es oficial hasta que se confirme.</div>
     <input id="reBus" placeholder="Buscar alumno por nombre o matrícula" autocomplete="off"><div class="lista" id="reRes"></div>
-    <div id="reForm" class="oculto"><div class="lista" id="reAl"></div><div id="reClase"></div>
+    <div id="reForm" class="oculto"><div class="lista" id="reAl"></div>
+      <div class="fh"><label>Fecha de los hechos<input type="date" id="reDia"></label><label>Hora<input type="time" id="reHora"></label><button class="btn3" id="reAhora">Ahora</button></div>
       <input id="reFalta" list="lFaltas" placeholder="Falta (elige o escribe)" maxlength="150"><datalist id="lFaltas"></datalist>
       <select id="reGrav"><option value="">Gravedad…</option><option>Leve</option><option>Grave</option><option>Muy grave</option></select>
       <textarea id="reDesc" maxlength="600" placeholder="Qué pasó, dónde y quién estaba presente"></textarea>
       <label class="sub">Foto de evidencia (opcional)</label><input type="file" id="reFoto" accept="image/*" capture="environment"><img id="rePrev" class="prev oculto" alt="">
       <div class="err" id="reErr"></div><button class="btn" id="reGuardar">Guardar reporte</button></div></div>
-    <div class="card"><h2>Reportes de hoy</h2><div class="lista" id="reHoy"></div></div></section>
+    <div class="card"><h2>Reportes (últimos 7 días)</h2><div class="lista" id="reHoy"></div></div></section>
   <!-- Enviar -->
   <section id="vEnv" class="oculto"><div class="card"><h2>Enviar a la Subdirección</h2>
     <div class="stat"><div><b id="nPases">0</b>pases</div><div><b id="nFuera">0</b>fuera de clase</div><div><b id="nRep">0</b>reportes</div></div>
@@ -118,6 +122,19 @@ const pad = n => String(n).padStart(2, '0');
 const hoy = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
 const hora = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 const fechaTxt = iso => new Date(iso + 'T12:00').toLocaleDateString('es-MX', {weekday: 'long', day: 'numeric', month: 'long'});
+// Se puede registrar hasta 45 días atrás (la Subdirección no acepta registros más viejos) y nunca a futuro
+const DIAS_ATRAS = 45;
+const isoMenos = n => { const d = new Date(); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const fechaCorta = iso => new Date(iso + 'T12:00').toLocaleDateString('es-MX', {weekday: 'short', day: 'numeric', month: 'short'});
+function prepararFecha(sel){ const i = $(sel); i.max = hoy(); i.min = isoMenos(DIAS_ATRAS); if (!i.value) i.value = hoy(); }
+function validarFH(fecha, h){
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return 'Elige la fecha.';
+  if (fecha > hoy()) return 'La fecha no puede ser futura.';
+  if (fecha < isoMenos(DIAS_ATRAS)) return `Solo se puede registrar hasta ${DIAS_ATRAS} días atrás.`;
+  if (h != null) { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(h)) return 'Escribe la hora.'; if (fecha === hoy() && h > hora()) return 'La hora no puede ser futura.'; }
+  return '';
+}
+const etqDia = f => f === hoy() ? '' : ` <span class="otrodia">${esc(fechaCorta(f))}</span>`;
 const toast = t => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2600); };
 const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf))), deb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 const b64grande = buf => { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
@@ -138,14 +155,9 @@ async function totp(secret, paso){ const key = await crypto.subtle.importKey('ra
   const msg = new ArrayBuffer(8), dv = new DataView(msg); dv.setUint32(0, Math.floor(paso / 4294967296)); dv.setUint32(4, paso >>> 0);
   const h = new Uint8Array(await crypto.subtle.sign('HMAC', key, msg)), o = h[19] & 15; return String((((h[o] & 127) << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3]) % 1000000).padStart(6, '0'); }
 async function totpValido(secret, code){ if (!/^\d{6}$/.test(code)) return false; const paso = Math.floor(Date.now() / 30000); for (const w of [-1, 0, 1]) if ((await totp(secret, paso + w)) === code) return true; return false; }
-// Intentos fallidos guardados en el celular (no se reinician al cerrar la app ni al reiniciar el celular):
-// 3 errores seguidos (PIN o código del autenticador) = la app queda bloqueada 24 horas, sin excepción.
-const MAX_FALLOS = 3, BLOQUEO_MS = 24 * 3600 * 1000;
-async function esperaFallos(){ const f = await DB.get('fallos') || {n: 0, hasta: 0}; return f.hasta > Date.now() ? f.hasta : 0; }
-async function fallo(){ const f = await DB.get('fallos') || {n: 0, hasta: 0}; f.n++; let quedan = MAX_FALLOS - f.n;
-  if (f.n >= MAX_FALLOS) { f.hasta = Date.now() + BLOQUEO_MS; f.n = 0; quedan = 0; } await DB.set('fallos', f); return quedan; }
-const txtBloqueo = hasta => `Demasiados intentos. La app quedó bloqueada hasta el ${new Date(hasta).toLocaleString('es-MX', {weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'}).replace(/\.$/, '')}.`;
-const txtQuedan = (q, que) => q ? `${que} Te ${q === 1 ? 'queda 1 intento' : `quedan ${q} intentos`}; al tercer error la app se bloquea 24 horas.` : null;
+// Intentos fallidos guardados en el celular (no se reinician al recargar): 5 fallos = espera creciente
+async function esperaFallos(){ const f = await DB.get('fallos') || {n: 0, hasta: 0}; return f.hasta > Date.now() ? Math.ceil((f.hasta - Date.now()) / 1000) : 0; }
+async function fallo(){ const f = await DB.get('fallos') || {n: 0, hasta: 0}; f.n++; if (f.n % 5 === 0) f.hasta = Date.now() + Math.min(3600, 60 * Math.pow(2, f.n / 5 - 1)) * 1000; await DB.set('fallos', f); }
 let sesionCompleta = false;
 
 // ---------- Estado ----------
@@ -169,11 +181,11 @@ async function iniciar(){
 }
 $('#pinOk').onclick = async () => {
   const s = await DB.get('seguro'), espera = await esperaFallos(); $('#pinErr').textContent = '';
-  if (espera) return $('#pinErr').textContent = txtBloqueo(espera);
+  if (espera) return $('#pinErr').textContent = `Demasiados intentos. Espera ${espera > 90 ? Math.ceil(espera / 60) + ' minutos' : espera + ' segundos'}.`;
   try { sal = deb64(s.sal); llave = await claveDe($('#pin').value, sal); PQ = await descifrar(s.paquete, llave); }
-  catch { llave = null; PQ = null; const q = await fallo(); $('#pinErr').textContent = txtQuedan(q, 'PIN incorrecto.') || txtBloqueo(await esperaFallos()); $('#pin').value = ''; return; }
+  catch { llave = null; PQ = null; await fallo(); $('#pinErr').textContent = 'PIN incorrecto.'; $('#pin').value = ''; return; }
   if (PQ.prefecto.totp && !sesionCompleta && !(await totpValido(PQ.prefecto.totp, $('#pinCod').value.trim()))) {
-    llave = null; PQ = null; const q = await fallo(); $('#pinErr').textContent = txtQuedan(q, 'Código del autenticador incorrecto o vencido. Revisa que la hora del celular sea automática.') || txtBloqueo(await esperaFallos()); $('#pinCod').value = ''; return; }
+    llave = null; PQ = null; await fallo(); $('#pinErr').textContent = 'Código del autenticador incorrecto o vencido. Revisa que la hora del celular sea automática.'; $('#pinCod').value = ''; return; }
   try { await DB.set('fallos', {n: 0, hasta: 0}); sesionCompleta = true;
     const d = await DB.get('datos'); D = d ? await descifrar(d, llave) : D; $('#pin').value = ''; $('#pinCod').value = '';
     limpiarViejos(); $('#hdr').textContent = `${PQ.prefecto.nombre} · ${fechaTxt(hoy())}`; $('#barra').classList.remove('oculto'); pintarBadge(); vista('vPase'); vigilar();
@@ -183,9 +195,7 @@ $('#pin').onkeydown = e => { if (e.key !== 'Enter') return; if ($('#pinCod').cla
 $('#pinCod').onkeydown = e => { if (e.key === 'Enter') $('#pinOk').click(); };
 async function leerPaquete(archivo, clave){
   const o = JSON.parse(await archivo.text()); if (o.tipo !== 'P42-PAQUETE') throw new Error('Ese archivo no es un paquete de Plantel 42.');
-  // Acepta la clave con o sin guion, con espacios o en minúsculas (la Subdirección la da como XXXX-XXXX)
-  const c = String(clave).toUpperCase().replace(/[^A-Z0-9]/g, ''), k = c.length === 8 ? c.slice(0, 4) + '-' + c.slice(4) : String(clave).trim().toUpperCase();
-  try { return await descifrar(o, await claveDe(k, deb64(o.sal))); } catch { throw new Error('La clave no corresponde a este paquete.'); }
+  try { return await descifrar(o, await claveDe(clave.trim().toUpperCase(), deb64(o.sal))); } catch { throw new Error('La clave no corresponde a este paquete.'); }
 }
 $('#cfOk').onclick = async () => {
   const err = $('#cfErr'), f = $('#cfArchivo').files[0], pin = $('#cfPin').value; err.textContent = '';
@@ -206,14 +216,16 @@ function bloquear(){ llave = null; PQ = null; $('#barra').classList.add('oculto'
 function limpiarViejos(){ const lim = Date.now() - 7 * 86400000; const viejo = x => x.env && new Date(x.envFecha || 0).getTime() < lim;
   D.pases = D.pases.filter(x => !viejo(x)); D.fuera = D.fuera.filter(x => !viejo(x)); D.reportes = D.reportes.filter(x => !viejo(x)); D.envios = (D.envios || []).filter(x => new Date(x.fecha).getTime() >= lim); }
 // ---------- Pase de lista ----------
+let diaPase = '';
 function pintarPase(){
-  $('#paseFecha').textContent = `Hoy, ${fechaTxt(hoy())}`;
-  const hechos = new Set(D.pases.filter(p => p.fecha === hoy()).map(p => p.g));
+  prepararFecha('#paseDia'); diaPase = $('#paseDia').value || hoy();
+  $('#paseFecha').innerHTML = diaPase === hoy() ? `Hoy, ${fechaTxt(hoy())}` : `<b style="color:#8A5A00">Pase de otro día: ${esc(fechaTxt(diaPase))}</b>`;
+  const hechos = new Set(D.pases.filter(p => p.fecha === diaPase).map(p => p.g));
   $('#grupos').innerHTML = PQ.grupos.map(g => `<button class="chip${g.g === grupoSel ? ' sel' : ''}${hechos.has(g.g) ? ' hecho' : ''}" data-g="${g.g}">${g.g}${hechos.has(g.g) ? ' ✓' : ''}</button>`).join('');
-  document.querySelectorAll('#grupos .chip').forEach(b => b.onclick = () => { grupoSel = b.dataset.g; const prev = D.pases.filter(p => p.fecha === hoy() && p.g === grupoSel).pop();
+  document.querySelectorAll('#grupos .chip').forEach(b => b.onclick = () => { grupoSel = b.dataset.g; const prev = D.pases.filter(p => p.fecha === diaPase && p.g === grupoSel).pop();
     marcas = {}; if (prev) { prev.ausentes.forEach(m => marcas[m] = 'falta'); prev.retardos.forEach(m => marcas[m] = 'retardo'); } pintarPase(); });
   const g = PQ.grupos.find(x => x.g === grupoSel); $('#paseCard').classList.toggle('oculto', !g); if (!g) return;
-  $('#paseTit').textContent = `Grupo ${g.g}`;
+  $('#paseTit').innerHTML = `Grupo ${g.g}${etqDia(diaPase)}`;
   const nF = Object.values(marcas).filter(x => x === 'falta').length, nR = Object.values(marcas).filter(x => x === 'retardo').length;
   $('#paseCuenta').textContent = `${g.alumnos.length} alumnos · ${nF} faltas${nR ? ` · ${nR} retardos` : ''}`;
   $('#alumnos').innerHTML = g.alumnos.map(a => `<div class="al ${marcas[a.m] || ''}" data-m="${a.m}">${marcas[a.m] ? `<span class="et">${marcas[a.m] === 'falta' ? 'Falta' : 'Retardo'}</span>` : ''}${foto(a)}${esc(a.n)}</div>`).join('');
@@ -221,73 +233,37 @@ function pintarPase(){
   $('#paseGuardar').textContent = hechos.has(g.g) ? 'Actualizar pase de lista' : 'Guardar pase de lista';
 }
 $('#paseGuardar').onclick = async () => {
-  const g = grupoSel; if (!g) return;
-  D.pases = D.pases.filter(p => !(p.fecha === hoy() && p.g === g && !p.env));
-  D.pases.push({id: uuid(), fecha: hoy(), g, hora: hora(), ausentes: Object.keys(marcas).filter(m => marcas[m] === 'falta'), retardos: Object.keys(marcas).filter(m => marcas[m] === 'retardo')});
-  await guardarDatos(); toast(`Pase de ${g} guardado`); grupoSel = ''; marcas = {}; pintarPase();
+  const g = grupoSel; if (!g) return; const e = validarFH(diaPase); if (e) return toast(e);
+  D.pases = D.pases.filter(p => !(p.fecha === diaPase && p.g === g && !p.env));
+  D.pases.push({id: uuid(), fecha: diaPase, g, hora: diaPase === hoy() ? hora() : '07:00', ausentes: Object.keys(marcas).filter(m => marcas[m] === 'falta'), retardos: Object.keys(marcas).filter(m => marcas[m] === 'retardo')});
+  await guardarDatos(); toast(`Pase de ${g} guardado${diaPase === hoy() ? '' : ' (' + fechaCorta(diaPase) + ')'}`); grupoSel = ''; marcas = {}; pintarPase();
 };
 // ---------- Búsqueda de alumnos ----------
 const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 function buscar(q){ const w = norm(q).split(/\s+/).filter(Boolean); if (!w.length) return [];
   return alumnos().filter(a => { const t = norm(`${a.n} ${a.m} ${a.g}`); return w.every(x => t.includes(x)); }).slice(0, 15); }
-const itemInfo = (a, info) => `<div class="it" data-m="${a.m}">${foto(a)}<div><b>${esc(a.n)}</b><span>${esc(a.g)} · ${esc(a.m)}</span><span class="info">${info}</span></div></div>`;
 const itemAl = (a, extra) => `<div class="it" data-m="${a.m}">${foto(a)}<div><b>${esc(a.n)}</b><span>${esc(a.g)} · ${esc(a.m)}</span></div>${extra || ''}</div>`;
-// ---------- Clase del alumno (materia y docente) ----------
-// El paquete v2 trae el horario de cada alumno; la app propone la clase que tiene a esta hora. El prefecto puede elegir otra
-// de sus materias o escribir a mano (receso, entrada, baños…). Con un paquete anterior solo se puede escribir (opcional).
-const diasPQ = () => PQ.dias || ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-const horarioDe = a => (PQ.horarios && a && a.h !== undefined) ? PQ.horarios[a.h] : null;
-function claseAhora(a){ const h = horarioDe(a); if (!h) return null; const t = hora(); const c = (h[diasPQ()[new Date().getDay()]] || []).find(x => x[0] <= t && t < x[1]); return c ? c[2] : null; }
-function materiasDe(a){ const h = horarioDe(a); if (!h) return []; const s = new Set(); Object.values(h).forEach(l => l.forEach(x => s.add(x[2])));
-  return [...s].sort((x, y) => PQ.materias[x][0].localeCompare(PQ.materias[y][0])); }
-const nomClase = i => `${PQ.materias[i][0]}${PQ.materias[i][1] ? ' — ' + PQ.materias[i][1] : ''}`;
-function pintarClase(caja, p, a){
-  const ms = materiasDe(a), ah = claseAhora(a);
-  if (!ms.length) { $(caja).innerHTML = `<label class="sub">Clase o lugar (opcional)</label><input id="${p}Mat" maxlength="150" placeholder="Materia o lugar (ej. Receso, Entrada, Baños)"><input id="${p}Doc" maxlength="150" placeholder="Docente (opcional)">
-      <div class="sub">Este paquete no trae el horario: la Subdirección usará el horario. Pide un paquete nuevo para elegir la materia.</div>`; return; }
-  $(caja).innerHTML = `<label class="sub" for="${p}Sel">Clase (materia y docente)</label>
-    <select id="${p}Sel">${ms.map(i => `<option value="${i}" ${i === ah ? 'selected' : ''}>${esc(nomClase(i))}</option>`).join('')}<option value="otra" ${ah === null ? 'selected' : ''}>Otra / no fue en clase (escribir)</option></select>
-    <div class="eleccion" id="${p}Elec"></div>
-    <div class="sub">${ah !== null ? `Según el horario, a esta hora: <b>${esc(PQ.materias[ah][0])}</b>` : 'Según el horario, a esta hora no tiene clase.'}</div>
-    <div id="${p}Otra" class="${ah === null ? '' : 'oculto'}"><input id="${p}Mat" maxlength="150" placeholder="Materia o lugar (ej. Receso, Entrada, Baños)"><input id="${p}Doc" maxlength="150" placeholder="Docente (opcional)"></div>`;
-  const elec = () => { const v = $(`#${p}Sel`).value; $(`#${p}Otra`).classList.toggle('oculto', v !== 'otra');
-    $(`#${p}Elec`).innerHTML = v === 'otra' ? '' : `<b>${esc(PQ.materias[+v][0])}</b>${PQ.materias[+v][1] ? `<br>${esc(PQ.materias[+v][1])}` : ''}`; };
-  $(`#${p}Sel`).onchange = elec; elec();
-  document.querySelectorAll(`#${p}Otra input`).forEach(i => i.oninput = () => { const e = $(`#${p === 'fu' ? 'fuErr' : 'reErr'}`); if (e) e.textContent = ''; });
-}
-// Devuelve {mat, doc, manual} o {error}
-function leerClase(p){
-  const sel = $(`#${p}Sel`), mat = ($(`#${p}Mat`) || {}).value, doc = ($(`#${p}Doc`) || {}).value;
-  if (sel && sel.value !== 'otra') { const i = +sel.value; return {mat: PQ.materias[i][0], doc: PQ.materias[i][1], manual: false}; }
-  const m = String(mat || '').trim().slice(0, 150), d = String(doc || '').trim().slice(0, 150);
-  if (sel && !m) return {error: 'Escribe la materia o el lugar.'};
-  return m ? {mat: m, doc: d, manual: true} : {};
-}
-const txtClase = x => x.mat ? ` · ${esc(x.mat)}` : '';
 // ---------- Fuera de clase ----------
 function pintarFuera(){
-  const h = D.fuera.filter(x => x.fecha === hoy());
-  $('#fuHoy').innerHTML = h.length ? h.slice().reverse().map(x => itemInfo(alumno(x.m) || {n: x.m, m: x.m, g: ''}, `${x.hora}${txtClase(x)}${x.env ? ' · enviado' : ''}`)).join('') : '<div class="sub">Nadie todavía.</div>';
+  prepararFecha('#fuDia'); if (!$('#fuHora').value) $('#fuHora').value = hora();
+  const h = D.fuera.filter(x => x.fecha >= isoMenos(7)).sort((a, b) => `${a.fecha} ${a.hora}`.localeCompare(`${b.fecha} ${b.hora}`));
+  $('#fuHoy').innerHTML = h.length ? h.slice().reverse().map(x => itemAl(alumno(x.m) || {n: x.m, m: x.m, g: ''}, `<span class="sub">${x.hora}${etqDia(x.fecha)}${x.env ? ' · enviado' : ''}</span>`)).join('') : '<div class="sub">Nadie en los últimos 7 días.</div>';
 }
-let fuSel = null;
-$('#fuBus').oninput = () => { $('#fuRes').innerHTML = buscar($('#fuBus').value).map(a => itemAl(a, '<button class="btn3" style="padding:8px 10px">Elegir</button>')).join('');
-  document.querySelectorAll('#fuRes .it').forEach(it => it.onclick = () => {
-    fuSel = alumno(it.dataset.m); $('#fuRes').innerHTML = ''; $('#fuBus').value = ''; $('#fuErr').textContent = '';
-    $('#fuAl').innerHTML = itemAl(fuSel); pintarClase('#fuClase', 'fu', fuSel); $('#fuForm').classList.remove('oculto'); }); };
-const cerrarFuera = () => { fuSel = null; $('#fuForm').classList.add('oculto'); $('#fuClase').innerHTML = ''; };
-$('#fuCancelar').onclick = cerrarFuera;
-$('#fuGuardar').onclick = async () => {
-  if (!fuSel) return; const k = leerClase('fu'); if (k.error) return $('#fuErr').textContent = k.error;
-  D.fuera.push({id: uuid(), fecha: hoy(), hora: hora(), m: fuSel.m, ...k}); await guardarDatos(); toast('Registrado'); cerrarFuera(); pintarFuera(); };
+$('#fuBus').oninput = () => { $('#fuRes').innerHTML = buscar($('#fuBus').value).map(a => itemAl(a, '<button class="btn3" style="padding:8px 10px">Registrar</button>')).join('');
+  document.querySelectorAll('#fuRes .it').forEach(it => it.querySelector('button').onclick = async () => {
+    const a = alumno(it.dataset.m), f = $('#fuDia').value, h = $('#fuHora').value, e = validarFH(f, h); if (e) return toast(e);
+    if (!confirm(`¿Registrar a ${a.n} (${a.g}) fuera de clase el ${fechaTxt(f)} a las ${h}?`)) return;
+    D.fuera.push({id: uuid(), fecha: f, hora: h, m: a.m}); await guardarDatos(); $('#fuBus').value = ''; $('#fuRes').innerHTML = ''; toast('Registrado'); pintarFuera(); }); };
 // ---------- Reportes ----------
 let reSel = null, reFoto = '';
 function pintarRep(){
+  prepararFecha('#reDia'); if (!$('#reHora').value) $('#reHora').value = hora();
   $('#lFaltas').innerHTML = (PQ.faltas || []).map(f => `<option value="${esc(f.f)}">${esc(f.g)}</option>`).join('');
-  const h = D.reportes.filter(x => x.fecha === hoy());
-  $('#reHoy').innerHTML = h.length ? h.slice().reverse().map(x => itemInfo(alumno(x.m) || {n: x.m, m: x.m, g: ''}, `${x.hora} · ${esc(x.falta)}${txtClase(x)}${x.env ? ' · enviado' : ''}`)).join('') : '<div class="sub">Sin reportes hoy.</div>';
+  const h = D.reportes.filter(x => x.fecha >= isoMenos(7)).sort((a, b) => `${a.fecha} ${a.hora}`.localeCompare(`${b.fecha} ${b.hora}`));
+  $('#reHoy').innerHTML = h.length ? h.slice().reverse().map(x => itemAl(alumno(x.m) || {n: x.m, m: x.m, g: ''}, `<span class="sub">${x.hora}${etqDia(x.fecha)} · ${esc(x.falta)}${x.env ? ' · enviado' : ''}</span>`)).join('') : '<div class="sub">Sin reportes en los últimos 7 días.</div>';
 }
 $('#reBus').oninput = () => { $('#reRes').innerHTML = buscar($('#reBus').value).map(a => itemAl(a)).join('');
-  document.querySelectorAll('#reRes .it').forEach(it => it.onclick = () => { reSel = alumno(it.dataset.m); $('#reRes').innerHTML = ''; $('#reBus').value = ''; $('#reAl').innerHTML = itemAl(reSel); pintarClase('#reClase', 're', reSel); $('#reForm').classList.remove('oculto'); }); };
+  document.querySelectorAll('#reRes .it').forEach(it => it.onclick = () => { reSel = alumno(it.dataset.m); $('#reRes').innerHTML = ''; $('#reBus').value = ''; $('#reAl').innerHTML = itemAl(reSel); $('#reForm').classList.remove('oculto'); }); };
 $('#reFalta').oninput = () => { const f = (PQ.faltas || []).find(x => x.f === $('#reFalta').value); if (f) $('#reGrav').value = f.g; };
 $('#reFoto').onchange = async () => { const f = $('#reFoto').files[0]; if (!f) return;
   const img = await createImageBitmap(f), k = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement('canvas');
@@ -298,11 +274,15 @@ $('#reGuardar').onclick = async () => {
   if (!reSel) return err.textContent = 'Elige al alumno.';
   if (!$('#reFalta').value.trim()) return err.textContent = 'Escribe la falta.';
   if (!$('#reGrav').value) return err.textContent = 'Elige la gravedad.';
-  const k = leerClase('re'); if (k.error) return err.textContent = k.error;
-  D.reportes.push({id: uuid(), fecha: hoy(), hora: hora(), m: reSel.m, falta: $('#reFalta').value.trim().slice(0, 150), gravedad: $('#reGrav').value, desc: $('#reDesc').value.trim().slice(0, 600), foto: reFoto, ...k});
+  const fr = $('#reDia').value, hr = $('#reHora').value, efh = validarFH(fr, hr); if (efh) return err.textContent = efh;
+  D.reportes.push({id: uuid(), fecha: fr, hora: hr, m: reSel.m, falta: $('#reFalta').value.trim().slice(0, 150), gravedad: $('#reGrav').value, desc: $('#reDesc').value.trim().slice(0, 600), foto: reFoto});
   await guardarDatos(); toast('Reporte guardado');
-  reSel = null; reFoto = ''; $('#reForm').classList.add('oculto'); $('#reClase').innerHTML = ''; ['#reFalta', '#reDesc'].forEach(s => $(s).value = ''); $('#reGrav').value = ''; $('#reFoto').value = ''; $('#rePrev').classList.add('oculto'); pintarRep();
+  reSel = null; reFoto = ''; $('#reForm').classList.add('oculto'); ['#reFalta', '#reDesc'].forEach(s => $(s).value = ''); $('#reGrav').value = ''; $('#reFoto').value = ''; $('#rePrev').classList.add('oculto'); pintarRep();
 };
+$('#paseDia').onchange = () => { grupoSel = ''; marcas = {}; pintarPase(); };
+$('#paseHoy').onclick = () => { $('#paseDia').value = hoy(); grupoSel = ''; marcas = {}; pintarPase(); };
+$('#fuAhora').onclick = () => { $('#fuDia').value = hoy(); $('#fuHora').value = hora(); };
+$('#reAhora').onclick = () => { $('#reDia').value = hoy(); $('#reHora').value = hora(); };
 // ---------- Envío firmado ----------
 function pintarEnv(){
   const p = pendientes(); $('#nPases').textContent = p.p.length; $('#nFuera').textContent = p.f.length; $('#nRep').textContent = p.r.length;
@@ -312,10 +292,10 @@ function pintarEnv(){
 }
 async function armarArchivo(ids){
   const sel = x => ids ? x.envio === ids : !x.env, envio = ids || uuid();
-  const pay = {envio, prefecto: PQ.prefecto.id, creado: new Date().toISOString(), version: 2,
+  const pay = {envio, prefecto: PQ.prefecto.id, creado: new Date().toISOString(), version: 1,
     pases: D.pases.filter(sel).map(({id, fecha, g, hora, ausentes, retardos}) => ({id, fecha, g, hora, ausentes, retardos})),
-    fuera: D.fuera.filter(sel).map(({id, fecha, hora, m, mat, doc, manual}) => ({id, fecha, hora, m, mat, doc, manual})),
-    reportes: D.reportes.filter(sel).map(({id, fecha, hora, m, falta, gravedad, desc, foto, mat, doc, manual}) => ({id, fecha, hora, m, falta, gravedad, desc, foto, mat, doc, manual}))};
+    fuera: D.fuera.filter(sel).map(({id, fecha, hora, m}) => ({id, fecha, hora, m})),
+    reportes: D.reportes.filter(sel).map(({id, fecha, hora, m, falta, gravedad, desc, foto}) => ({id, fecha, hora, m, falta, gravedad, desc, foto}))};
   const payload = JSON.stringify(pay);
   const k = await crypto.subtle.importKey('raw', deb64(PQ.prefecto.secreto), {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
   const firma = b64(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(payload)));
