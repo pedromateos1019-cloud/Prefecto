@@ -48,11 +48,16 @@
   .fh{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:8px 0}
   .fh label{flex:1;min-width:120px;font-size:12.5px;color:var(--gris);display:flex;flex-direction:column}
   .fh input{margin:4px 0 0} .fh .btn3{padding:11px 12px}
+  .quien{background:#FFF8E6;border-bottom:1px solid #F1D9A6;padding:7px 14px;font-size:13.5px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .quien a{color:var(--g);font-weight:700}
+  .capa{position:fixed;inset:0;background:rgba(16,24,40,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+  .capa .card{width:100%;max-width:520px;margin:0;border-radius:16px 16px 0 0;max-height:80vh;overflow:auto}
   .otrodia{display:inline-block;background:#FFF3D6;color:#8A5A00;border-radius:6px;padding:1px 6px;font-size:11.5px;font-weight:700}
 </style>
 </head>
 <body>
 <header><b>Pase de lista · Plantel 42</b><small id="hdr">COBATAB</small></header>
+<div class="quien oculto" id="quien"><span>Reporta: <b id="quienNom"></b></span><a href="#" id="quienCambiar">Cambiar</a></div>
 <main>
   <!-- Configuración inicial -->
   <section id="vConfig" class="oculto"><div class="card"><h2>Configurar este celular</h2>
@@ -169,6 +174,24 @@ const foto = a => a && a.f ? `<img src="${a.f}" alt="">` : `<div class="sinfoto"
 function vista(id){ document.querySelectorAll('main>section').forEach(s => s.classList.toggle('oculto', s.id !== id)); document.querySelectorAll('#barra button').forEach(b => b.classList.toggle('act', b.dataset.v === id));
   if (id === 'vPase') pintarPase(); if (id === 'vFuera') pintarFuera(); if (id === 'vRep') pintarRep(); if (id === 'vEnv') pintarEnv(); window.scrollTo(0, 0); }
 document.querySelectorAll('#barra button').forEach(b => b.onclick = () => vista(b.dataset.v));
+// ---------- Quién reporta (celular compartido) ----------
+// Por defecto reporta el dueño de la cuenta; el cambio dura solo el día en que se hace.
+const reportaActual = () => (D.reporta && D.reporta.fecha === hoy() && D.reporta.nombre) || PQ.prefecto.nombre;
+function pintarQuien(){ if (!PQ) return; const q = reportaActual(); $('#quienNom').textContent = q + (q !== PQ.prefecto.nombre ? ' (en este celular)' : ''); $('#quien').classList.remove('oculto'); }
+function elegirQuien(){
+  const lista = [...new Set([PQ.prefecto.nombre, ...((PQ.encargados || []).filter(x => typeof x === 'string' && x.trim()))])], act = reportaActual();
+  const c = document.createElement('div'); c.className = 'capa';
+  c.innerHTML = `<div class="card"><h2>¿Quién reporta hoy en este celular?</h2><div class="sub">Lo que registres a partir de ahora y hasta el final del día saldrá a nombre de esta persona. Tu app principal anota también desde qué celular se envió.</div>
+    <div class="lista">${lista.map(n => `<div class="it" data-q="${n.replace(/"/g, '&quot;')}"><div><b>${n.replace(/</g, '&lt;')}</b><span>${n === PQ.prefecto.nombre ? 'Dueño de este celular' : 'Encargado de orden'}</span></div>${n === act ? '<b class="ok">✓</b>' : ''}</div>`).join('')}</div>
+    <label class="sub" style="display:block;margin-top:10px">Otra persona (si no aparece en la lista)<input id="qOtro" maxlength="60" placeholder="Nombre completo"></label>
+    <div class="fila" style="margin-top:10px"><button class="btn3" id="qCan">Cancelar</button><button class="btn" id="qOk">Usar este nombre</button></div></div>`;
+  document.body.appendChild(c);
+  const fijar = async n => { n = String(n || '').replace(/\s+/g, ' ').trim().slice(0, 60); if (!n) return; D.reporta = n === PQ.prefecto.nombre ? null : {nombre: n, fecha: hoy()}; await guardarDatos(); c.remove(); pintarQuien(); toast(`Ahora reporta: ${n}`); };
+  c.querySelectorAll('[data-q]').forEach(x => x.onclick = () => fijar(x.dataset.q));
+  c.querySelector('#qOk').onclick = () => fijar(c.querySelector('#qOtro').value);
+  c.querySelector('#qCan').onclick = () => c.remove(); c.onclick = e => { if (e.target === c) c.remove(); };
+}
+$('#quienCambiar').onclick = e => { e.preventDefault(); if (PQ) elegirQuien(); };
 const pendientes = () => ({p: D.pases.filter(x => !x.env), f: D.fuera.filter(x => !x.env), r: D.reportes.filter(x => !x.env)});
 function pintarBadge(){ const p = pendientes(), n = p.p.length + p.f.length + p.r.length; $('#badge').textContent = n; $('#badge').classList.toggle('oculto', !n); }
 // ---------- Arranque ----------
@@ -188,7 +211,7 @@ $('#pinOk').onclick = async () => {
     llave = null; PQ = null; await fallo(); $('#pinErr').textContent = 'Código del autenticador incorrecto o vencido. Revisa que la hora del celular sea automática.'; $('#pinCod').value = ''; return; }
   try { await DB.set('fallos', {n: 0, hasta: 0}); sesionCompleta = true;
     const d = await DB.get('datos'); D = d ? await descifrar(d, llave) : D; $('#pin').value = ''; $('#pinCod').value = '';
-    limpiarViejos(); $('#hdr').textContent = `${PQ.prefecto.nombre} · ${fechaTxt(hoy())}`; $('#barra').classList.remove('oculto'); pintarBadge(); vista('vPase'); vigilar();
+    limpiarViejos(); $('#hdr').textContent = `Celular de ${PQ.prefecto.nombre} · ${fechaTxt(hoy())}`; $('#barra').classList.remove('oculto'); pintarQuien(); pintarBadge(); vista('vPase'); vigilar();
   } catch (e) { $('#pinErr').textContent = 'No se pudieron leer los datos: ' + e.message; }
 };
 $('#pin').onkeydown = e => { if (e.key !== 'Enter') return; if ($('#pinCod').classList.contains('oculto')) $('#pinOk').click(); else $('#pinCod').focus(); };
@@ -207,7 +230,7 @@ $('#cfOk').onclick = async () => {
     if (PQ.prefecto.totp && !(await totpValido(PQ.prefecto.totp, $('#cfCodigo').value.trim()))) { PQ = null; return err.textContent = 'El código de Google Authenticator no coincide. Revisa que agregaste la cuenta con el QR de la Subdirección y que la hora del celular sea automática.'; }
     sal = crypto.getRandomValues(new Uint8Array(16)); llave = await claveDe(pin, sal); sesionCompleta = true;
     await DB.set('seguro', {sal: b64(sal), totp: !!PQ.prefecto.totp, nombre: PQ.prefecto.nombre.split(' ').slice(0, 2).join(' '), paquete: await cifrar(PQ, llave)}); await guardarDatos();
-    $('#hdr').textContent = `${PQ.prefecto.nombre} · ${fechaTxt(hoy())}`; $('#barra').classList.remove('oculto'); toast('Listo: celular configurado'); vista('vPase'); vigilar();
+    $('#hdr').textContent = `Celular de ${PQ.prefecto.nombre} · ${fechaTxt(hoy())}`; $('#barra').classList.remove('oculto'); pintarQuien(); toast('Listo: celular configurado'); vista('vPase'); vigilar();
   } catch (e) { err.textContent = e.message; }
 };
 // Bloqueo por inactividad (5 min)
@@ -235,7 +258,7 @@ function pintarPase(){
 $('#paseGuardar').onclick = async () => {
   const g = grupoSel; if (!g) return; const e = validarFH(diaPase); if (e) return toast(e);
   D.pases = D.pases.filter(p => !(p.fecha === diaPase && p.g === g && !p.env));
-  D.pases.push({id: uuid(), fecha: diaPase, g, hora: diaPase === hoy() ? hora() : '07:00', ausentes: Object.keys(marcas).filter(m => marcas[m] === 'falta'), retardos: Object.keys(marcas).filter(m => marcas[m] === 'retardo')});
+  D.pases.push({id: uuid(), fecha: diaPase, g, hora: diaPase === hoy() ? hora() : '07:00', ausentes: Object.keys(marcas).filter(m => marcas[m] === 'falta'), retardos: Object.keys(marcas).filter(m => marcas[m] === 'retardo'), quien: reportaActual()});
   await guardarDatos(); toast(`Pase de ${g} guardado${diaPase === hoy() ? '' : ' (' + fechaCorta(diaPase) + ')'}`); grupoSel = ''; marcas = {}; pintarPase();
 };
 // ---------- Búsqueda de alumnos ----------
@@ -253,7 +276,7 @@ $('#fuBus').oninput = () => { $('#fuRes').innerHTML = buscar($('#fuBus').value).
   document.querySelectorAll('#fuRes .it').forEach(it => it.querySelector('button').onclick = async () => {
     const a = alumno(it.dataset.m), f = $('#fuDia').value, h = $('#fuHora').value, e = validarFH(f, h); if (e) return toast(e);
     if (!confirm(`¿Registrar a ${a.n} (${a.g}) fuera de clase el ${fechaTxt(f)} a las ${h}?`)) return;
-    D.fuera.push({id: uuid(), fecha: f, hora: h, m: a.m}); await guardarDatos(); $('#fuBus').value = ''; $('#fuRes').innerHTML = ''; toast('Registrado'); pintarFuera(); }); };
+    D.fuera.push({id: uuid(), fecha: f, hora: h, m: a.m, quien: reportaActual()}); await guardarDatos(); $('#fuBus').value = ''; $('#fuRes').innerHTML = ''; toast('Registrado'); pintarFuera(); }); };
 // ---------- Reportes ----------
 let reSel = null, reFoto = '';
 function pintarRep(){
@@ -275,7 +298,7 @@ $('#reGuardar').onclick = async () => {
   if (!$('#reFalta').value.trim()) return err.textContent = 'Escribe la falta.';
   if (!$('#reGrav').value) return err.textContent = 'Elige la gravedad.';
   const fr = $('#reDia').value, hr = $('#reHora').value, efh = validarFH(fr, hr); if (efh) return err.textContent = efh;
-  D.reportes.push({id: uuid(), fecha: fr, hora: hr, m: reSel.m, falta: $('#reFalta').value.trim().slice(0, 150), gravedad: $('#reGrav').value, desc: $('#reDesc').value.trim().slice(0, 600), foto: reFoto});
+  D.reportes.push({id: uuid(), fecha: fr, hora: hr, m: reSel.m, falta: $('#reFalta').value.trim().slice(0, 150), gravedad: $('#reGrav').value, desc: $('#reDesc').value.trim().slice(0, 600), foto: reFoto, quien: reportaActual()});
   await guardarDatos(); toast('Reporte guardado');
   reSel = null; reFoto = ''; $('#reForm').classList.add('oculto'); ['#reFalta', '#reDesc'].forEach(s => $(s).value = ''); $('#reGrav').value = ''; $('#reFoto').value = ''; $('#rePrev').classList.add('oculto'); pintarRep();
 };
@@ -293,9 +316,9 @@ function pintarEnv(){
 async function armarArchivo(ids){
   const sel = x => ids ? x.envio === ids : !x.env, envio = ids || uuid();
   const pay = {envio, prefecto: PQ.prefecto.id, creado: new Date().toISOString(), version: 1,
-    pases: D.pases.filter(sel).map(({id, fecha, g, hora, ausentes, retardos}) => ({id, fecha, g, hora, ausentes, retardos})),
-    fuera: D.fuera.filter(sel).map(({id, fecha, hora, m}) => ({id, fecha, hora, m})),
-    reportes: D.reportes.filter(sel).map(({id, fecha, hora, m, falta, gravedad, desc, foto}) => ({id, fecha, hora, m, falta, gravedad, desc, foto}))};
+    pases: D.pases.filter(sel).map(({id, fecha, g, hora, ausentes, retardos, quien}) => ({id, fecha, g, hora, ausentes, retardos, quien})),
+    fuera: D.fuera.filter(sel).map(({id, fecha, hora, m, quien}) => ({id, fecha, hora, m, quien})),
+    reportes: D.reportes.filter(sel).map(({id, fecha, hora, m, falta, gravedad, desc, foto, quien}) => ({id, fecha, hora, m, falta, gravedad, desc, foto, quien}))};
   const payload = JSON.stringify(pay);
   const k = await crypto.subtle.importKey('raw', deb64(PQ.prefecto.secreto), {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
   const firma = b64(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(payload)));
@@ -320,7 +343,7 @@ $('#ajArchivo').onchange = async () => { const f = $('#ajArchivo').files[0]; if 
   try { const nuevo = await leerPaquete(f, clave); if (nuevo.prefecto.id !== PQ.prefecto.id) throw new Error('El paquete es de otro prefecto.');
     if (nuevo.prefecto.totp && nuevo.prefecto.totp !== PQ.prefecto.totp) { const c = prompt('El paquete trae un autenticador nuevo. Escanea el QR en la Subdirección y escribe el código de Google Authenticator:');
       if (!c || !(await totpValido(nuevo.prefecto.totp, c.trim()))) throw new Error('El código no coincide; el paquete no se cargó.'); }
-    PQ = nuevo; const s = await DB.get('seguro'); s.paquete = await cifrar(PQ, llave); s.totp = !!PQ.prefecto.totp; await DB.set('seguro', s); toast('Paquete actualizado'); vista('vPase'); } catch (e) { alert(e.message); } $('#ajArchivo').value = ''; };
+    PQ = nuevo; const s = await DB.get('seguro'); s.nombre = PQ.prefecto.nombre.split(' ').slice(0, 2).join(' '); s.paquete = await cifrar(PQ, llave); $('#hdr').textContent = `Celular de ${PQ.prefecto.nombre} · ${fechaTxt(hoy())}`; pintarQuien(); s.totp = !!PQ.prefecto.totp; await DB.set('seguro', s); toast('Paquete actualizado'); vista('vPase'); } catch (e) { alert(e.message); } $('#ajArchivo').value = ''; };
 $('#ajBorrar').onclick = async () => { if (!confirm('¿Borrar todo de este celular? Lo no enviado se perderá.')) return; await DB.borrar(); location.reload(); };
 iniciar();
 </script>
